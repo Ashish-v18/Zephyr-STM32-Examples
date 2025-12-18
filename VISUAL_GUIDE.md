@@ -4,9 +4,9 @@
 
 ```mermaid
 graph TD
-    User[User / Python Script] -->|Wi-Fi (TCP)| Pico[Pico 2W (Modem)]
-    Pico -->|UART (Serial)| Nucleo[STM32 Nucleo (Controller)]
-    Nucleo -->|SPI (WS2812)| LED[RGB LED]
+    User["User / Python Script"] -->|Wi-Fi (TCP)| Pico["Pico 2W (Modem)"]
+    Pico -->|UART (Serial)| Nucleo["STM32 Nucleo (Controller)"]
+    Nucleo -->|SPI (WS2812)| LED["RGB LED"]
 
     subgraph "Wireless Layer"
     User
