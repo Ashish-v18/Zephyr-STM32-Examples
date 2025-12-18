@@ -1,0 +1,9 @@
+# Mark Pico scripts as vendored (don't count in language stats)
+pico_script/* linguist-vendored
+
+# Mark tools as documentation (helper scripts, not main project)
+tools/* linguist-documentation
+
+# Ensure C is recognized as the primary language
+*.c linguist-language=C
+*.h linguist-language=C
