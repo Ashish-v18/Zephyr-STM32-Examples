@@ -2,6 +2,9 @@
 build/
 .cache/
 
+# Local notes (not to be shared)
+git_setup_notes.txt
+
 # Zephyr generated files
 zephyr/
 
