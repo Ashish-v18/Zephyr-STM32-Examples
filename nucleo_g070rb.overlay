@@ -1,0 +1,47 @@
+#include <zephyr/dt-bindings/led/led.h>
+
+/ {
+    /* Define the aliases and the physical LED node for the Blinky example */
+    aliases {
+        led0 = &user_led0;
+    };
+
+    leds {
+        compatible = "gpio-leds";
+        user_led0: user_led_0 {
+            // Note: This pin definition must be correct for your board
+            gpios = <&gpioa 5 GPIO_ACTIVE_HIGH>; 
+            label = "User LED 0";
+            status = "okay";
+        };
+    };
+};
+
+/* Enable SPI1 for manual WS2812 control */
+&spi1 {
+    status = "okay";
+    pinctrl-0 = <&spi1_sck_pa5 &spi1_mosi_pa7>;
+    pinctrl-names = "default";
+};
+
+/* Ensure GPIO Port A is enabled (pins PA5 and PA7 are on this port) */
+&gpioa {
+    status = "okay";
+};
+
+/* Enable USART2 for Console/Shell (USB) */
+&usart2 {
+    status = "okay";
+    current-speed = <115200>;
+    pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+    pinctrl-names = "default";
+};
+
+/* Enable USART1 for Wi-Fi Bridge (Pico connection) */
+/* PA9 = D8 (TX), PA10 = D2 (RX) */
+&usart1 {
+    status = "okay";
+    current-speed = <115200>;
+    pinctrl-0 = <&usart1_tx_pa9 &usart1_rx_pa10>;
+    pinctrl-names = "default";
+};

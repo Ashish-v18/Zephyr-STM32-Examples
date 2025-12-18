@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>LED Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #111;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .card {
+      margin: 0 auto;
+      max-width: 380px;
+      padding: 24px;
+      border-radius: 20px;
+      background: #222;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+
+    .preview {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 10px auto 16px auto;
+      border: 4px solid #444;
+      box-sizing: border-box;
+      background: #000;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: none;
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 50%;
+      border: 2px solid #444;
+    }
+
+    .picker-row {
+      margin-bottom: 12px;
+    }
+
+    .sliders {
+      margin-top: 10px;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0;
+    }
+
+    .slider-row label {
+      width: 18px;
+      font-weight: 600;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+    }
+
+    .slider-value {
+      width: 32px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>LED CONTROL</h1>
+
+    <div class="preview" id="preview"></div>
+
+    <div class="picker-row">
+      <input type="color" id="picker" value="#000000">
+    </div>
+
+    <div class="sliders">
+      <div class="slider-row">
+        <label for="rRange">R</label>
+        <input type="range" id="rRange" min="0" max="255" value="0">
+        <span class="slider-value" id="rVal">0</span>
+      </div>
+      <div class="slider-row">
+        <label for="gRange">G</label>
+        <input type="range" id="gRange" min="0" max="255" value="0">
+        <span class="slider-value" id="gVal">0</span>
+      </div>
+      <div class="slider-row">
+        <label for="bRange">B</label>
+        <input type="range" id="bRange" min="0" max="255" value="0">
+        <span class="slider-value" id="bVal">0</span>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="setRGB(255,0,0)">Red</button>
+      <button onclick="setRGB(0,255,0)">Green</button>
+      <button onclick="setRGB(0,0,255)">Blue</button>
+      <button onclick="setRGB(255,255,255)">White</button>
+      <button onclick="setRGB(0,0,0)">Off</button>
+    </div>
+
+    <div class="status" id="status">Ready</div>
+  </div>
+
+  <script>
+    const picker = document.getElementById('picker');
+    const preview = document.getElementById('preview');
+    const statusEl = document.getElementById('status');
+
+    const rRange = document.getElementById('rRange');
+    const gRange = document.getElementById('gRange');
+    const bRange = document.getElementById('bRange');
+    const rVal = document.getElementById('rVal');
+    const gVal = document.getElementById('gVal');
+    const bVal = document.getElementById('bVal');
+
+    let lastSend = 0;
+
+    function sendRGB(r, g, b) {
+      fetch(`/set?r=${r}&g=${g}&b=${b}`)
+        .then(_ => {
+          statusEl.textContent = `Sent: ${r}, ${g}, ${b}`;
+          statusEl.style.color = '#4f4';
+        })
+        .catch(err => {
+          statusEl.textContent = 'Error sending';
+          statusEl.style.color = '#f44';
+        });
+    }
+
+    function updateUI(r, g, b, send = true) {
+      // Clamp
+      r = Math.max(0, Math.min(255, r));
+      g = Math.max(0, Math.min(255, g));
+      b = Math.max(0, Math.min(255, b));
+
+      // Update sliders + labels
+      rRange.value = r;
+      gRange.value = g;
+      bRange.value = b;
+      rVal.textContent = r;
+      gVal.textContent = g;
+      bVal.textContent = b;
+
+      // Update preview + picker
+      const hex = '#' + [r, g, b].map(x => {
+        const h = x.toString(16);
+        return h.length === 1 ? '0' + h : h;
+      }).join('');
+      picker.value = hex;
+      preview.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+
+      if (send) {
+        const now = Date.now();
+        if (now - lastSend > 80) { // debounce a bit
+          lastSend = now;
+          sendRGB(r, g, b);
+        }
+      }
+    }
+
+    function setRGB(r, g, b) {
+      updateUI(r, g, b, true);
+    }
+
+    // Picker -> RGB
+    picker.addEventListener('input', (e) => {
+      const hex = e.target.value;
+      const r = parseInt(hex.substr(1, 2), 16);
+      const g = parseInt(hex.substr(3, 2), 16);
+      const b = parseInt(hex.substr(5, 2), 16);
+      updateUI(r, g, b, true);
+    });
+
+    // Sliders -> RGB
+    function slidersChanged() {
+      const r = parseInt(rRange.value);
+      const g = parseInt(gRange.value);
+      const b = parseInt(bRange.value);
+      updateUI(r, g, b, true);
+    }
+
+    rRange.addEventListener('input', slidersChanged);
+    gRange.addEventListener('input', slidersChanged);
+    bRange.addEventListener('input', slidersChanged);
+
+    // Initialize
+    updateUI(0, 0, 0, false);
+  </script>
+</body>
+
+</html>
